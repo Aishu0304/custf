@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgChartsModule } from 'ng2-charts';
-import { ChartConfiguration, ChartData } from 'chart.js';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { forkJoin } from 'rxjs';
 import { SafeDatePipe } from '../../../pipes/safe-date.pipe';
 import { CustomerService } from '../../../../services/customer.service';
@@ -15,9 +15,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
-  selector: 'app-sales-data',
+  selector: 'app-financial-overall',
   standalone: true,
   imports: [
     CommonModule,
@@ -43,64 +44,154 @@ export class FinancialOverallComponent implements OnInit {
   // Data arrays
   salesOrders: any[] = [];
   inquiries: any[] = [];
-  delivery: any[] = [];
+  deliveries: any[] = [];
   agingDetails: any[] = [];
   
   isLoading: boolean = true;
   error: string = '';
   dateRange: string = 'month';
-  activeTab: string = 'summary';
+  activeTab: number = 0;
 
-  // KPI Metrics
-  kpis = {
+  // Summary KPIs
+  summaryKPIs = {
     totalInquiries: 0,
-    totalOrders: 0,
+    totalSalesOrders: 0,
     totalDeliveries: 0,
     totalRevenue: 0,
     outstandingPayments: 0,
-    deliveryFulfillmentRate: 0,
-    onTimeDeliveryRate: 0,
+    overduePayments: 0,
     avgOrderValue: 0,
-    topCustomer: '',
-    pendingDeliveries: 0,
-    overduePayments: 0
+    deliveryRate: 0
   };
 
-  // Chart Configurations
-  inquiryTrendData: ChartConfiguration<'line'>['data'] = {
+  // Inquiry Analytics Charts
+  inquiryTrendChart: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [{
       data: [],
-      label: 'Inquiries',
+      label: 'Monthly Inquiries',
       borderColor: '#3f51b5',
-      backgroundColor: 'rgba(63, 81, 181, 0.2)',
+      backgroundColor: 'rgba(63, 81, 181, 0.1)',
       fill: true,
       tension: 0.4
     }]
   };
 
-  deliveryStatusData: ChartData<'doughnut'> = {
+  inquiryTypeChart: ChartData<'doughnut'> = {
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: ['#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50']
+    }]
+  };
+
+  inquiryValueChart: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'Inquiry Value by Type',
+      backgroundColor: 'rgba(63, 81, 181, 0.7)',
+      borderColor: '#3f51b5',
+      borderWidth: 1
+    }]
+  };
+
+  // Sales Order Analytics Charts
+  salesTrendChart: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'Monthly Sales Revenue',
+      borderColor: '#4caf50',
+      backgroundColor: 'rgba(76, 175, 80, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  };
+
+  salesVolumeChart: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'Order Volume',
+      backgroundColor: 'rgba(76, 175, 80, 0.7)',
+      borderColor: '#4caf50',
+      borderWidth: 1
+    }]
+  };
+
+  salesDistributionChart: ChartData<'pie'> = {
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: ['#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107']
+    }]
+  };
+
+  // Delivery Analytics Charts
+  deliveryStatusChart: ChartData<'doughnut'> = {
     labels: ['Completed', 'Pending', 'In Transit'],
     datasets: [{
       data: [0, 0, 0],
-      backgroundColor: ['#4caf50', '#ff9800', '#2196f3'],
-      hoverOffset: 4
+      backgroundColor: ['#4caf50', '#ff9800', '#2196f3']
     }]
   };
 
-  salesTrendData: ChartConfiguration<'line'>['data'] = {
+  deliveryTrendChart: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [{
       data: [],
-      label: 'Sales Revenue',
-      borderColor: '#673ab7',
-      backgroundColor: 'rgba(103, 58, 183, 0.2)',
+      label: 'Monthly Deliveries',
+      borderColor: '#ff9800',
+      backgroundColor: 'rgba(255, 152, 0, 0.1)',
       fill: true,
       tension: 0.4
     }]
   };
 
- 
+  deliveryPerformanceChart: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'On-Time Delivery Rate (%)',
+      backgroundColor: 'rgba(255, 152, 0, 0.7)',
+      borderColor: '#ff9800',
+      borderWidth: 1
+    }]
+  };
+
+  // Aging Analytics Charts
+  agingDistributionChart: ChartData<'doughnut'> = {
+    labels: ['Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ['#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0']
+    }]
+  };
+
+  agingTrendChart: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'Overdue Amount Trend',
+      borderColor: '#f44336',
+      backgroundColor: 'rgba(244, 67, 54, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  };
+
+  agingAmountChart: ChartConfiguration<'bar'>['data'] = {
+    labels: ['Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0],
+      label: 'Amount by Aging Period',
+      backgroundColor: ['#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0'],
+      borderWidth: 1
+    }]
+  };
+
+  // Chart Options
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -124,12 +215,19 @@ export class FinancialOverallComponent implements OnInit {
       }
     }
   };
-  paymentChartOptions: { responsive: boolean; scales: { y: { beginAtZero: boolean; title: { display: boolean; text: string; }; }; x: { title: { display: boolean; text: string; }; }; }; plugins: { tooltip: { callbacks: { label: (context: { dataset: { data: any[]; }; raw: number; }) => string; }; }; legend: { display: boolean; }; }; } | undefined;
-  paymentStatusData: { labels: string[]; datasets: { label: string; data: number[]; backgroundColor: string[]; borderColor: string[]; borderWidth: number; }[]; } | undefined;
-  inquiryTrendOptions: { responsive: boolean; plugins: { legend: { position: string; }; tooltip: { callbacks: { label: (context: any) => string; }; }; }; scales: { y: { beginAtZero: boolean; title: { display: boolean; text: string; }; ticks: { stepSize: number; }; }; x: { title: { display: boolean; text: string; }; }; }; } | undefined;
+
+  doughnutOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      }
+    }
+  };
 
   constructor(
-    private customerservice: CustomerService,
+    private http: HttpClient,
     private snackBar: MatSnackBar,
     private datePipe: DatePipe
   ) {}
@@ -146,17 +244,16 @@ export class FinancialOverallComponent implements OnInit {
       return;
     }
 
-    const sapCustomerId = customerId.padStart(10, '0');
-    console.log('Formatted SAP Customer ID:', sapCustomerId);
-
     forkJoin({
-      salesOrders: this.customerservice.getSalesOrderData(sapCustomerId),
-      inquiries: this.customerservice.getInquiryData(sapCustomerId),
-      deliveries: this.customerservice.getDeliveryData(sapCustomerId),
-      agingDetails: this.customerservice.getAgingData(sapCustomerId)
+      salesOrders: this.http.post<any>('http://localhost:3000/salesorder', { CUSTNO: customerId }),
+      inquiries: this.http.post<any>('http://localhost:3000/inquiry', { CUSTNO: customerId }),
+      deliveries: this.http.post<any>('http://localhost:3000/delivery', { CUSTNO: customerId }),
+      agingDetails: this.http.post<any>('http://localhost:3000/aging', { CUSTNO: customerId })
     }).subscribe({
       next: (responses) => {
         this.processApiResponses(responses);
+        this.calculateSummaryKPIs();
+        this.updateAllCharts();
         this.isLoading = false;
       },
       error: (err) => {
@@ -168,409 +265,314 @@ export class FinancialOverallComponent implements OnInit {
   }
 
   private processApiResponses(responses: any): void {
-    this.salesOrders = this.extractArrayData(responses.salesOrders, 'salesOrders');
-    this.inquiries = this.extractArrayData(responses.inquiries, 'inquiries');
-    this.delivery = this.extractArrayData(responses.deliveries, 'delivery');
-    this.agingDetails = this.extractArrayData(responses.agingDetails, 'agingDetails');
-
-    console.log('Processed Data:', {
-      salesOrders: this.salesOrders,
-      inquiries: this.inquiries,
-      delivery: this.delivery,
-      agingDetails: this.agingDetails
-    });
-
-    if (this.salesOrders.length === 0 && 
-        this.inquiries.length === 0 && 
-        this.delivery.length === 0) {
-      this.showError('No data found for this customer');
-    }
-
-    this.calculateKPIs();
-    this.updateCharts();
-  }
-
-  private extractArrayData(response: any, dataKey: string): any[] {
-    if (!response) return [];
+    // Process Sales Orders
+    this.salesOrders = responses.salesOrders?.salesOrders || [];
     
-    if (Array.isArray(response)) {
-      return response;
-    } else if (response[dataKey] && Array.isArray(response[dataKey])) {
-      return response[dataKey];
-    } else if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
-  }
-
-  calculateKPIs(): void {
-    // Initialize all KPIs
-    this.resetKPIs();
-
-    // Only calculate if we have data
-    if (this.hasData()) {
-      this.calculateBasicCounts();
-      this.calculateFinancialMetrics();
-      this.calculateDeliveryMetrics();
-      this.calculateCustomerMetrics();
-    }
-  }
-
-  private resetKPIs(): void {
-    this.kpis = {
-      totalInquiries: 0,
-      totalOrders: 0,
-      totalDeliveries: 0,
-      totalRevenue: 0,
-      outstandingPayments: 0,
-      deliveryFulfillmentRate: 0,
-      onTimeDeliveryRate: 0,
-      avgOrderValue: 0,
-      topCustomer: 'N/A',
-      pendingDeliveries: 0,
-      overduePayments: 0
-    };
-  }
-
-  private hasData(): boolean {
-    return this.salesOrders.length > 0 || 
-           this.inquiries.length > 0 || 
-           this.delivery.length > 0;
-  }
-
-  private calculateBasicCounts(): void {
-    this.kpis.totalInquiries = this.inquiries.length;
-    this.kpis.totalOrders = this.salesOrders.length;
-    this.kpis.totalDeliveries = this.delivery.length;
-  }
-
-  private calculateFinancialMetrics(): void {
-    this.kpis.totalRevenue = this.safeReduce(this.salesOrders, 'NETWR', 'netValue');
-    this.kpis.outstandingPayments = this.safeReduce(this.agingDetails, 'NETWR', 'netValue');
-    this.kpis.avgOrderValue = this.kpis.totalOrders > 0 
-      ? this.kpis.totalRevenue / this.kpis.totalOrders 
-      : 0;
-  }
-
-  private safeReduce(items: any[], ...fieldNames: string[]): number {
-    return items.reduce((sum, item) => {
-      const value = this.getNumericValue(item, fieldNames);
-      return sum + (isNaN(value) ? 0 : value);
-    }, 0);
-  }
-
-  private getNumericValue(item: any, fieldNames: string[]): number {
-    for (const field of fieldNames) {
-      if (item[field] !== undefined && item[field] !== null) {
-        return parseFloat(item[field]);
-      }
-    }
-    return 0;
-  }
-
-  private calculateDeliveryMetrics(): void {
-    const totalOrderedQuantity = this.safeReduce(this.salesOrders, 'KWMENG', 'orderQty');
-    const totalDeliveredQuantity = this.safeReduce(this.delivery, 'LFIMG', 'deliveryQty');
+    // Process Inquiries
+    this.inquiries = responses.inquiries?.inquiries || [];
     
-    this.kpis.deliveryFulfillmentRate = totalOrderedQuantity > 0 
-      ? (totalDeliveredQuantity / totalOrderedQuantity) * 100 
-      : 0;
-
-    const onTimeDeliveries = this.delivery.filter(delivery => {
-      try {
-        const deliveryDate = new Date(delivery.LFDAT || delivery.deliveryDate);
-        const requestedDate = new Date(delivery.VDATU || delivery.requestedDate);
-        return deliveryDate <= requestedDate;
-      } catch {
-        return false;
-      }
-    }).length;
+    // Process Deliveries
+    this.deliveries = Array.isArray(responses.deliveries?.delivery) 
+      ? responses.deliveries.delivery 
+      : responses.deliveries?.delivery ? [responses.deliveries.delivery] : [];
     
-    this.kpis.onTimeDeliveryRate = this.kpis.totalDeliveries > 0 
-      ? (onTimeDeliveries / this.kpis.totalDeliveries) * 100 
-      : 0;
-
-    this.kpis.pendingDeliveries = this.delivery.filter(delivery => 
-      (delivery.GBSTK || delivery.status || '').toString().toUpperCase() !== 'C'
-    ).length;
+    // Process Aging Details
+    this.agingDetails = responses.agingDetails?.agingDetails || [];
   }
 
-  private calculateCustomerMetrics(): void {
-    const customerRevenue = new Map<string, number>();
+  calculateSummaryKPIs(): void {
+    // Basic counts
+    this.summaryKPIs.totalInquiries = this.inquiries.length;
+    this.summaryKPIs.totalSalesOrders = this.salesOrders.length;
+    this.summaryKPIs.totalDeliveries = this.deliveries.length;
+
+    // Revenue calculations
+    this.summaryKPIs.totalRevenue = this.salesOrders.reduce((sum, order) => 
+      sum + (parseFloat(order.netValue) || 0), 0);
+
+    this.summaryKPIs.avgOrderValue = this.salesOrders.length > 0 
+      ? this.summaryKPIs.totalRevenue / this.salesOrders.length : 0;
+
+    // Payment calculations
+    this.summaryKPIs.outstandingPayments = this.agingDetails.reduce((sum, item) => 
+      sum + (parseFloat(item.netValue) || 0), 0);
+
+    this.summaryKPIs.overduePayments = this.agingDetails
+      .filter(item => parseInt(item.aging) > 0)
+      .reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0);
+
+    // Delivery rate
+    const completedDeliveries = this.deliveries.filter(delivery => 
+      (delivery.status || delivery.overallStatus || delivery.GBSTK || '').toString().toUpperCase() === 'C').length;
     
-    this.salesOrders.forEach(order => {
-      const customerId = order.KUNNR || order.customerId || 'N/A';
-      const current = customerRevenue.get(customerId) || 0;
-      const value = this.getNumericValue(order, ['NETWR', 'netValue']);
-      customerRevenue.set(customerId, current + value);
-    });
-    
-    const sortedCustomers = Array.from(customerRevenue.entries()).sort(([, a], [, b]) => b - a);
-    this.kpis.topCustomer = sortedCustomers[0]?.[0] || 'N/A';
-    
-    this.kpis.overduePayments = this.agingDetails.filter(item => {
-      const aging = this.getNumericValue(item, ['AGING', 'aging']);
-      return aging > 0;
-    }).length;
+    this.summaryKPIs.deliveryRate = this.deliveries.length > 0 
+      ? (completedDeliveries / this.deliveries.length) * 100 : 0;
   }
 
-  updateCharts(): void {
-    this.updateInquiryTrend();
-    this.updateDeliveryStatus();
-    this.updateSalesTrend();
-    this.updatePaymentStatus();
+  updateAllCharts(): void {
+    this.updateInquiryCharts();
+    this.updateSalesOrderCharts();
+    this.updateDeliveryCharts();
+    this.updateAgingCharts();
   }
-updateInquiryTrend(): void {
-    if (!this.inquiries || this.inquiries.length === 0) {
-        console.warn('No inquiry data available');
-        return;
-    }
 
-    const monthlyInquiries = new Map<string, number>();
-    const currentYear = new Date().getFullYear();
-    
-    this.inquiries.forEach(inquiry => {
-        try {
-            // Use createdDate as primary field from your data structure
-            const dateStr = inquiry.createdDate;
-            
-            // Skip invalid dates like "0000-00-00"
-            if (!dateStr || dateStr.startsWith('0000-00-00')) {
-                return;
-            }
-            
-            const date = new Date(dateStr);
-            
-            // Validate date - skip if invalid or in the far future
-            if (isNaN(date.getTime()) ){
-                console.warn('Invalid inquiry date:', dateStr, inquiry);
-                return;
-            }
-            
-            // Skip dates more than 10 years in the future
-            if (date.getFullYear() > currentYear + 10) {
-                console.warn('Future inquiry date:', dateStr, inquiry);
-                return;
-            }
-            
-            const monthKey = new DatePipe('en-US').transform(date, 'MMM yyyy') || '';
-            monthlyInquiries.set(monthKey, (monthlyInquiries.get(monthKey) || 0) + 1);
-        } catch (e) {
-            console.error('Error processing inquiry date:', e, inquiry);
-        }
-    });
-
-    // Sort months chronologically
-    const sortedMonths = Array.from(monthlyInquiries.keys()).sort((a, b) => {
-        return new Date(a).getTime() - new Date(b).getTime();
-    });
-
-    // Prepare chart data
-    this.inquiryTrendData = {
-        labels: sortedMonths,
-        datasets: [{
-            label: 'Number of Inquiries',
-            data: sortedMonths.map(month => monthlyInquiries.get(month) || 0),
-            backgroundColor: 'rgba(63, 81, 181, 0.5)',
-            borderColor: '#3f51b5',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: true
-        }]
-    };
-
-    // Chart options
-    this.inquiryTrendOptions = {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: (context) => {
-                        return `${context.dataset.label}: ${context.raw}`;
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Number of Inquiries'
-                },
-                ticks: {
-                    stepSize: 1
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Month'
-                }
-            }
-        }
-    };
-}
-  
-  updateSalesTrend(): void {
-    const monthlySales = new Map<string, number>();
-    
-    this.salesOrders.forEach(order => {
-      try {
-        const date = new Date(order.ERDAT || order.orderDate);
-        const monthKey = new SafeDatePipe(this.datePipe).transform(date, 'MMM yyyy');
-        const current = monthlySales.get(monthKey) || 0;
-        const value = this.getNumericValue(order, ['NETWR', 'netValue']);
-        monthlySales.set(monthKey, current + value);
-      } catch (e) {
-        console.error('Error processing sales order date:', e);
-      }
-    });
-
-    const sortedMonths = Array.from(monthlySales.keys()).sort((a, b) => 
-      new Date(a).getTime() - new Date(b).getTime());
-    
-    this.salesTrendData = {
-      ...this.salesTrendData,
-      labels: sortedMonths,
+  updateInquiryCharts(): void {
+    // Inquiry Trend Chart
+    const monthlyInquiries = this.groupByMonth(this.inquiries, 'createdDate');
+    this.inquiryTrendChart = {
+      labels: Object.keys(monthlyInquiries),
       datasets: [{
-        ...this.salesTrendData.datasets[0],
-        data: sortedMonths.map(month => monthlySales.get(month) || 0)
+        data: Object.values(monthlyInquiries),
+        label: 'Monthly Inquiries',
+        borderColor: '#3f51b5',
+        backgroundColor: 'rgba(63, 81, 181, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    };
+
+    // Inquiry Type Distribution
+    const typeDistribution = this.groupByField(this.inquiries, 'docType');
+    this.inquiryTypeChart = {
+      labels: Object.keys(typeDistribution),
+      datasets: [{
+        data: Object.values(typeDistribution),
+        backgroundColor: ['#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50']
+      }]
+    };
+
+    // Inquiry Value by Type
+    const valueByType = this.inquiries.reduce((acc: any, inquiry) => {
+      const type = inquiry.docType || 'Unknown';
+      acc[type] = (acc[type] || 0) + (parseFloat(inquiry.netValue) || 0);
+      return acc;
+    }, {});
+
+    this.inquiryValueChart = {
+      labels: Object.keys(valueByType),
+      datasets: [{
+        data: Object.values(valueByType),
+        label: 'Total Value by Type',
+        backgroundColor: 'rgba(63, 81, 181, 0.7)',
+        borderColor: '#3f51b5',
+        borderWidth: 1
       }]
     };
   }
 
- updatePaymentStatus(): void {
-    if (!this.agingDetails || this.agingDetails.length === 0) {
-        console.warn('No aging details available');
-        return;
-    }
+  updateSalesOrderCharts(): void {
+    // Sales Trend Chart
+    const monthlySales = this.groupByMonthWithSum(this.salesOrders, 'orderDate', 'netValue');
+    this.salesTrendChart = {
+      labels: Object.keys(monthlySales),
+      datasets: [{
+        data: Object.values(monthlySales),
+        label: 'Monthly Sales Revenue',
+        borderColor: '#4caf50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    };
 
-    // Calculate counts based on payment status and aging
-    const overdueCount = this.agingDetails.filter(item => {
-        const aging = parseInt(item.aging) || 0;
-        const status = (item.paymentStatus || '').toString().toLowerCase();
-        return aging > 0 || status.includes('overdue');
-    }).length;
+    // Sales Volume Chart
+    const monthlyVolume = this.groupByMonth(this.salesOrders, 'orderDate');
+    this.salesVolumeChart = {
+      labels: Object.keys(monthlyVolume),
+      datasets: [{
+        data: Object.values(monthlyVolume),
+        label: 'Order Volume',
+        backgroundColor: 'rgba(76, 175, 80, 0.7)',
+        borderColor: '#4caf50',
+        borderWidth: 1
+      }]
+    };
 
-    const notDueCount = this.agingDetails.length - overdueCount;
-
-    // Prepare data for bar chart
-    this.paymentStatusData = {
-        labels: ['Overdue', 'Not Due'],
-        datasets: [{
-            label: 'Payment Status',
-            data: [overdueCount, notDueCount],
-            backgroundColor: [
-                '#f44336', // Red for overdue
-                '#4caf50'  // Green for not due
-            ],
-            borderColor: [
-                '#d32f2f',
-                '#388e3c'
-            ],
-            borderWidth: 1
-        }]
-    }
-     this.paymentChartOptions = {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Number of Invoices'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Payment Status'
-                }
-            }
-        },
-        plugins: {
-            tooltip: {
-                callbacks: {
-                    label: (context: { dataset: { data: any[]; }; raw: number; }) => {
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const value = context.raw as number;
-                        const percentage = Math.round((value / total) * 100);
-                        return `${value} (${percentage}%)`;
-                    }
-                }
-            },
-            legend: {
-                display: false
-            }
-        }
+    // Sales Distribution by Document Type
+    const salesByType = this.groupByField(this.salesOrders, 'documentType');
+    this.salesDistributionChart = {
+      labels: Object.keys(salesByType),
+      datasets: [{
+        data: Object.values(salesByType),
+        backgroundColor: ['#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107']
+      }]
     };
   }
-  setDateRange(range: string): void {
-    this.dateRange = range;
-    this.updateCharts();
-  }
 
-  setActiveTab(tab: string): void {
-    this.activeTab = tab;
-  }
+  updateDeliveryCharts(): void {
+    // Delivery Status Chart
+    const statusCounts = {
+      completed: this.deliveries.filter(d => 
+        (d.overallStatus || d.GBSTK || d.status || '').toString().toUpperCase() === 'C').length,
+      pending: this.deliveries.filter(d => 
+        (d.overallStatus || d.GBSTK || d.status || '').toString().toUpperCase() === 'P').length,
+      inTransit: this.deliveries.filter(d => 
+        (d.overallStatus || d.GBSTK || d.status || '').toString().toUpperCase() === 'A').length
+    };
 
-  getTopProducts(): any[] {
-    const productMap = new Map<string, { units: number, revenue: number }>();
-    
-    this.salesOrders.forEach(order => {
-      const productKey = order.MATNR || order.materialNumber || 'Unknown';
-      const current = productMap.get(productKey) || { units: 0, revenue: 0 };
-      
-      productMap.set(productKey, {
-        units: current.units + this.getNumericValue(order, ['KWMENG', 'orderQty']),
-        revenue: current.revenue + this.getNumericValue(order, ['NETWR', 'netValue'])
+    this.deliveryStatusChart = {
+      labels: ['Completed', 'Pending', 'In Transit'],
+      datasets: [{
+        data: [statusCounts.completed, statusCounts.pending, statusCounts.inTransit],
+        backgroundColor: ['#4caf50', '#ff9800', '#2196f3']
+      }]
+    };
+
+    // Delivery Trend Chart
+    const monthlyDeliveries = this.groupByMonth(this.deliveries, 'deliveryDate');
+    this.deliveryTrendChart = {
+      labels: Object.keys(monthlyDeliveries),
+      datasets: [{
+        data: Object.values(monthlyDeliveries),
+        label: 'Monthly Deliveries',
+        borderColor: '#ff9800',
+        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    };
+
+    // Delivery Performance Chart (On-time rate by month)
+    const performanceByMonth = Object.keys(monthlyDeliveries).map(month => {
+      const monthDeliveries = this.deliveries.filter(d => {
+        const deliveryMonth = this.formatMonth(d.deliveryDate);
+        return deliveryMonth === month;
       });
+      
+      const onTimeDeliveries = monthDeliveries.filter(d => 
+        (d.overallStatus || d.GBSTK || d.status || '').toString().toUpperCase() === 'C').length;
+      
+      return monthDeliveries.length > 0 ? (onTimeDeliveries / monthDeliveries.length) * 100 : 0;
     });
 
-    return Array.from(productMap.entries())
-      .map(([product, data]) => ({
-        product,
-        units: data.units,
-        revenue: data.revenue
-      }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
+    this.deliveryPerformanceChart = {
+      labels: Object.keys(monthlyDeliveries),
+      datasets: [{
+        data: performanceByMonth,
+        label: 'On-Time Delivery Rate (%)',
+        backgroundColor: 'rgba(255, 152, 0, 0.7)',
+        borderColor: '#ff9800',
+        borderWidth: 1
+      }]
+    };
   }
-  updateDeliveryStatus(): void {
-    // First check if we have delivery data
-    if (!this.delivery || this.delivery.length === 0) {
-        console.warn('No delivery data available');
-        return;
+
+  updateAgingCharts(): void {
+    // Aging Distribution Chart
+    const agingBuckets = {
+      current: this.agingDetails.filter(item => parseInt(item.aging) < 0).length,
+      '1-30': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging >= 0 && aging <= 30;
+      }).length,
+      '31-60': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging > 30 && aging <= 60;
+      }).length,
+      '61-90': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging > 60 && aging <= 90;
+      }).length,
+      '90+': this.agingDetails.filter(item => parseInt(item.aging) > 90).length
+    };
+
+    this.agingDistributionChart = {
+      labels: ['Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days'],
+      datasets: [{
+        data: Object.values(agingBuckets),
+        backgroundColor: ['#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0']
+      }]
+    };
+
+    // Aging Amount Chart
+    const agingAmounts = {
+      current: this.agingDetails.filter(item => parseInt(item.aging) < 0)
+        .reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0),
+      '1-30': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging >= 0 && aging <= 30;
+      }).reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0),
+      '31-60': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging > 30 && aging <= 60;
+      }).reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0),
+      '61-90': this.agingDetails.filter(item => {
+        const aging = parseInt(item.aging);
+        return aging > 60 && aging <= 90;
+      }).reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0),
+      '90+': this.agingDetails.filter(item => parseInt(item.aging) > 90)
+        .reduce((sum, item) => sum + (parseFloat(item.netValue) || 0), 0)
+    };
+
+    this.agingAmountChart = {
+      labels: ['Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days'],
+      datasets: [{
+        data: Object.values(agingAmounts),
+        label: 'Amount by Aging Period',
+        backgroundColor: ['#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0'],
+        borderWidth: 1
+      }]
+    };
+
+    // Aging Trend Chart (monthly overdue amounts)
+    const monthlyOverdue = this.groupByMonthWithSum(
+      this.agingDetails.filter(item => parseInt(item.aging) > 0), 
+      'dueDate', 
+      'netValue'
+    );
+
+    this.agingTrendChart = {
+      labels: Object.keys(monthlyOverdue),
+      datasets: [{
+        data: Object.values(monthlyOverdue),
+        label: 'Monthly Overdue Amount',
+        borderColor: '#f44336',
+        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    };
+  }
+
+  // Helper methods
+  private groupByMonth(data: any[], dateField: string): { [key: string]: number } {
+    return data.reduce((acc: any, item) => {
+      const month = this.formatMonth(item[dateField]);
+      if (month !== 'Invalid Date') {
+        acc[month] = (acc[month] || 0) + 1;
+      }
+      return acc;
+    }, {});
+  }
+
+  private groupByMonthWithSum(data: any[], dateField: string, valueField: string): { [key: string]: number } {
+    return data.reduce((acc: any, item) => {
+      const month = this.formatMonth(item[dateField]);
+      if (month !== 'Invalid Date') {
+        acc[month] = (acc[month] || 0) + (parseFloat(item[valueField]) || 0);
+      }
+      return acc;
+    }, {});
+  }
+
+  private groupByField(data: any[], field: string): { [key: string]: number } {
+    return data.reduce((acc: any, item) => {
+      const value = item[field] || 'Unknown';
+      acc[value] = (acc[value] || 0) + 1;
+      return acc;
+    }, {});
+  }
+
+  private formatMonth(dateString: string): string {
+    try {
+      if (!dateString || dateString === '0000-00-00') return 'Invalid Date';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return this.datePipe.transform(date, 'MMM yyyy') || 'Invalid Date';
+    } catch {
+      return 'Invalid Date';
     }
-
-    // Use overallStatus as the status field (from your data structure)
-    const statusCounts = {
-        completed: this.delivery.filter(d => 
-            (d.overallStatus || d.GBSTK || d.status || d.deliveryStatus || '').toString().toUpperCase() === 'C'
-        ).length,
-        pending: this.delivery.filter(d => 
-            (d.overallStatus || d.GBSTK || d.status || d.deliveryStatus || '').toString().toUpperCase() === 'P'
-        ).length,
-        inTransit: this.delivery.filter(d => 
-            (d.overallStatus || d.GBSTK || d.status || d.deliveryStatus || '').toString().toUpperCase() === 'A' ||
-            (d.overallStatus || d.GBSTK || d.status || d.deliveryStatus || '').toString().toUpperCase() === 'I'
-        ).length
-    };
-
-    console.log('Delivery Status Counts:', statusCounts);
-
-    this.deliveryStatusData = {
-        labels: ['Completed', 'Pending', 'In Transit'],
-        datasets: [{
-            data: [statusCounts.completed, statusCounts.pending, statusCounts.inTransit],
-            backgroundColor: ['#4caf50', '#ff9800', '#2196f3']
-        }]
-    };
-}
+  }
 
   formatCurrency(value: number, currency: string = 'USD'): string {
     return `${currency} ${value.toLocaleString('en-US', { 
@@ -588,5 +590,11 @@ updateInquiryTrend(): void {
       duration: 5000,
       panelClass: ['error-snackbar']
     });
+  }
+
+  setDateRange(range: string): void {
+    this.dateRange = range;
+    // Implement date filtering logic if needed
+    this.updateAllCharts();
   }
 }
