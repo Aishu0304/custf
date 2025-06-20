@@ -1,35 +1,53 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { catchError, throwError } from 'rxjs';
+import { MatTableModule } from '@angular/material/table';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-financial-invoice',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatSelectModule
+  ],
   templateUrl: './financial-invoice.component.html',
   styleUrls: ['./financial-invoice.component.scss']
 })
 export class FinancialInvoiceComponent implements OnInit {
-  INVOICE: any[] = [];
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  displayedColumns: string[] = ['customerId', 'billingDoc', 'billingDate', 'itemNumber', 'billingtype', 'actions'];
+  dataSource: any[] = [];
+  filteredData: any[] = [];
+  
   searchText: string = '';
-  key: string = '';
-  reverse: boolean = false;
+  billingTypeFilter: string = '';
   customerId: string = '';
   isLoading: boolean = false;
   errorMessage: string | null = null;
-  currentPage = 1;
-  itemsPerPage = 5;
-
-  // Updated headers to match backend response
-  headers = [
-    "Customer Number", "Billing Document", "Billing Date", "Item Number", "Billing Type", "Download"
-  ];
-
-  names = [
-    "Customerno", "billingDoc", "billingDate", "itemNumber", "billingtype", "DOWNLOAD"
-  ];
+  billingTypes: string[] = []; // Will store unique billing types
 
   constructor(private http: HttpClient) {}
 
@@ -60,10 +78,13 @@ export class FinancialInvoiceComponent implements OnInit {
         next: (response: any) => {
           this.isLoading = false;
           if (response.status === 'S' && response.agingDetails) {
-            this.INVOICE = response.agingDetails;
+            this.dataSource = response.agingDetails;
+            this.filteredData = [...this.dataSource];
+            this.extractBillingTypes();
           } else {
             this.errorMessage = 'No invoice data found';
-            this.INVOICE = [];
+            this.dataSource = [];
+            this.filteredData = [];
           }
         },
         error: () => {
@@ -72,17 +93,38 @@ export class FinancialInvoiceComponent implements OnInit {
       });
   }
 
-  downloadPDF(billingDoc: string, itemNumber: string): void {
+  private extractBillingTypes(): void {
+    // Get unique billing types from data
+    const types = new Set(this.dataSource.map(item => item.billingtype));
+    this.billingTypes = Array.from(types).sort();
+  }
+
+  applyFilters(): void {
+    this.filteredData = this.dataSource.filter(item => {
+      const matchesSearch = !this.searchText || 
+        JSON.stringify(item).toLowerCase().includes(this.searchText.toLowerCase());
+      const matchesBillingType = !this.billingTypeFilter || 
+        item.billingtype === this.billingTypeFilter;
+      return matchesSearch && matchesBillingType;
+    });
+    
+    if (this.paginator) {
+      this.paginator.firstPage();
+    }
+  }
+
+  clearFilters(): void {
+    this.searchText = '';
+    this.billingTypeFilter = '';
+    this.applyFilters();
+  }
+ downloadPDF(billingDoc: string, itemNumber: string): void {
     this.isLoading = true;
     this.errorMessage = null;
 
- 
     const payload = {
       IV_KUNNR: itemNumber,
-      IV_VBELN: billingDoc,
-      
-      
-     
+      IV_VBELN: billingDoc
     };
 
     this.http.post('http://localhost:3000/invoice', payload, { 
@@ -126,41 +168,10 @@ export class FinancialInvoiceComponent implements OnInit {
     document.body.appendChild(a);
     a.click();
     
-    // Cleanup
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 100);
-  }
-
-  // Rest of your existing methods remain the same...
-  sort(key: string): void {
-    this.currentPage = 1;
-    if (this.key === key) {
-      this.reverse = !this.reverse;
-    } else {
-      this.key = key;
-      this.reverse = false;
-    }
-  }
-
-  get paginatedData() {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.INVOICE
-      .filter(row => JSON.stringify(row).toLowerCase().includes(this.searchText?.toLowerCase() || ''))
-      .sort((a, b) => {
-        if (!this.key) return 0;
-        return this.reverse
-          ? (a[this.key] > b[this.key] ? -1 : 1)
-          : (a[this.key] < b[this.key] ? -1 : 1);
-      })
-      .slice(start, start + this.itemsPerPage);
-  }
-
-  get totalPages() {
-    return Math.ceil(
-      this.INVOICE.filter(row => JSON.stringify(row).toLowerCase().includes(this.searchText?.toLowerCase() || '')).length / this.itemsPerPage
-    );
   }
 
   private getErrorMessage(error: HttpErrorResponse): string {
@@ -181,3 +192,7 @@ export class FinancialInvoiceComponent implements OnInit {
     this.errorMessage = null;
   }
 }
+  // ... (keep all other existing methods the same)
+
+
+ 

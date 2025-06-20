@@ -157,7 +157,16 @@ export class DebitmemoComponent implements OnInit {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredCreditMemos.slice(startIndex, startIndex + this.itemsPerPage);
   }
+// Add this to your component class
+selectedInvoice: any = null;
 
+showDetails(invoice: any): void {
+  this.selectedInvoice = invoice;
+}
+
+closeDetails(): void {
+  this.selectedInvoice = null;
+}
   getDisplayRange(): string {
     if (!this.filteredCreditMemos?.length) return '0 items';
     const start = (this.currentPage - 1) * this.itemsPerPage + 1;

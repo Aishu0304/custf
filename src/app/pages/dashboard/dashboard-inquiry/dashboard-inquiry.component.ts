@@ -78,7 +78,13 @@ export class DashboardInquiryComponent implements OnInit {
       this.router.navigate(['/login']);
     }
   }
+// Add this property to your component class
+selectedInquiry: any = null;
 
+// Replace viewDetails method with this:
+showDetails(inquiry: any): void {
+  this.selectedInquiry = inquiry;
+}
   loadInquiries(kunnr: string): void {
     this.isLoading = true;
     this.error = '';
@@ -156,7 +162,7 @@ export class DashboardInquiryComponent implements OnInit {
       return matchesSearch && matchesDocType && matchesCurrency && matchesDateRange;
     });
   }
-  selectedInquiry: Inquiry | null = null;
+
   
   
 

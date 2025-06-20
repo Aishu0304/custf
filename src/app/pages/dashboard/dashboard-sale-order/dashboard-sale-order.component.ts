@@ -138,6 +138,16 @@ export class DashboardSaleOrderComponent implements OnInit {
       }
     });
   }
+  // Add to your component class
+selectedSalesOrder: any = null;
+
+showDetails(order: any): void {
+  this.selectedSalesOrder = order;
+}
+
+closeDetails(): void {
+  this.selectedSalesOrder = null;
+}
 
   private transformSalesOrders(orders: any[]): SalesOrder[] {
     return orders.map(order => ({

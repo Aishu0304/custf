@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+
 :root {
   --text-primary: #212121;
   --text-secondary: #616161;
@@ -15,6 +16,17 @@
   --sap-accent-blue: #00a6fb;
   /* ... */
 }
+.custom-table-header {
+  .mat-header-row {
+    background-color: #3f51b5 !important;
+    
+    .mat-header-cell {
+      color: white !important;
+    }
+  }
+}
+
+// Add this after your theme definition
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

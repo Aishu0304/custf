@@ -93,7 +93,15 @@ export class CreditmemoComponent implements OnInit {
       }
     }
   }
+selectedInvoice: any = null;
 
+showDetails(invoice: any): void {
+  this.selectedInvoice = invoice;
+}
+
+closeDetails(): void {
+  this.selectedInvoice = null;
+}
   loadCreditMemos(kunnr: string): void {
     this.isLoading = true;
     this.error = '';

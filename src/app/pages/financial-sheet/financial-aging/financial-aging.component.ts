@@ -113,8 +113,24 @@ export class FinancialAgingComponent implements OnInit {
       }
     });
   }
-
+ hoveredRow: string | null = null;
+  selectedInvoice: Aging | null = null;
   
+
+/**
+ * Shows details of a specific invoice in a modal/dialog view
+ * @param invoice The invoice/aging record to display
+ */
+viewDetails(invoice: Aging): void {
+  this.selectedInvoice = invoice;
+}
+
+/**
+ * Closes the invoice details view
+ */
+closeDetails(): void {
+  this.selectedInvoice = null;
+}
 
   // Add these properties to your component class
 showAgingBucketFilter: boolean = true;
@@ -184,18 +200,7 @@ clearFilters(): void {
     });
   }
 
-  viewDetails(billingDoc: string): void {
-    if (!billingDoc) {
-      this.snackBar.open('No billing document selected', 'Close', { duration: 3000 });
-      return;
-    }
-
-    const aging = this.agings.find(a => a.billingDoc === billingDoc);
-    this.router.navigate(['/home/dashboard/aging', billingDoc], {
-      state: { agingData: aging }
-    });
-  }
-
+ 
   formatDate(date: string): string {
     return this.datePipe.transform(date, 'dd/MM/yyyy') || 'N/A';
   }

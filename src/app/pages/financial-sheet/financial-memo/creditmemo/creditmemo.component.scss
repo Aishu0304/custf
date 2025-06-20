@@ -1,57 +1,117 @@
 @use '@angular/material' as mat;
 
 
-.dashboard-container {
-  padding: 24px;
+// Force table header styles for both legacy and MDC tables
+.mat-table .mat-header-row,
+.mat-mdc-table .mdc-data-table__header-row {
+  background-color: #3f51b5 !important;
+  
+  .mat-header-cell,
+  .mat-mdc-header-cell,
+  .mdc-data-table__header-cell {
+    color: white !important;
+    font-weight: 500;
+    font-size: 14px;
+    
+    // For sort headers
+    .mat-sort-header-arrow {
+      color: white !important;
+    }
+  }
+}
+
+// Additional table styling
+.mat-mdc-table {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  
+  .mdc-data-table__header-row {
+    height: 56px; // Standard header height
+  }
+  
+  .mdc-data-table__row {
+    height: 52px; // Standard row height
+  }
+}
+.debitcontainer {
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0;
+  margin-top: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 2px;
 
   h2 {
     margin: 0;
     color: #3f51b5;
     font-weight: 500;
+    font-size: 1.25rem;
   }
 }
 
+/* ========== TABLE HEADER FIX ========== */
+.mat-table .mat-header-row,
+.mat-mdc-table .mdc-header-row {
+  background-color: #3f51b5 !important;
+
+  .mat-header-cell,
+  .mat-mdc-header-cell {
+    color: white !important;
+    font-weight: 500;
+    font-size: 14px;
+  }
+}
+
+/* ========== FILTER SECTION ========== */
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 0;
+  padding: 0;
   background-color: #f5f5f5;
-  border-radius: 8px;
+  border-radius: 0;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
 
   .search-field {
-    width: 100%;
+    width: 50%;
   }
 
   .row-filters {
     display: flex;
-    gap: 16px;
+    gap: 0;
     flex-wrap: wrap;
 
     mat-form-field {
       flex: 1;
       min-width: 200px;
-    }
 
-    .date-field {
-      min-width: 300px;
+      .mat-form-field-wrapper {
+        padding-bottom: 0;
+      }
+
+      .mat-form-field-outline {
+        background-color: #fafafa;
+        border-radius: 4px;
+      }
     }
   }
 }
 
+/* ========== TABLE STYLES ========== */
 .table-container {
   position: relative;
   min-height: 300px;
+  margin-top: 16px;
 
   .spinner {
     position: absolute;
@@ -61,26 +121,28 @@
   }
 }
 
-table {
+.mat-table {
   width: 100%;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
 
-  th {
-    background-color: #3f51b5;
-    color: white;
-    font-weight: 500;
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   }
 
-  td {
+  .mat-cell {
     padding: 8px 16px;
-  }
+    font-size: 13px;
+    color: #424242;
 
-  .description-cell {
-    max-width: 250px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    &.description-cell {
+      max-width: 250px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   .highlight-row {
@@ -94,8 +156,54 @@ table {
       transform: scale(1.1);
     }
   }
+
+  .mat-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f5f5f5 !important;
+    }
+  }
 }
 
+/* ========== STATUS BADGES ========== */
+.status-completed {
+  @include mat.elevation(1);
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-active {
+  @include mat.elevation(1);
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-Processing {
+  @include mat.elevation(1);
+  background-color: #fff8e1;
+  color: #d1300f;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-default {
+  @include mat.elevation(1);
+  background-color: #f5f5f5;
+  color: #616161;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ========== ERROR MESSAGE ========== */
 .error-message {
   display: flex;
   align-items: center;
@@ -107,6 +215,7 @@ table {
   margin-bottom: 16px;
 }
 
+/* ========== NO DATA STATE ========== */
 .no-data {
   display: flex;
   flex-direction: column;
@@ -117,6 +226,8 @@ table {
   text-align: center;
   background-color: white;
   border-radius: 8px;
+  border: 1px dashed #e0e0e0;
+  margin-top: 16px;
 
   mat-icon {
     font-size: 48px;
@@ -131,119 +242,101 @@ table {
     font-size: 16px;
   }
 }
-/* Add these styles to your existing dashboard-inquiry.component.scss */
 
-/* Enhanced table styling */
-.mat-table {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+/* ========== PAGINATION ========== */
+.delivery-paginator {
+  margin-top: 20px;
+  background: transparent;
+}
 
-  &:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  }
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 8px 0;
+}
 
-  .mat-header-cell {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
+/* ========== DETAILS POPUP ========== */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  .mat-cell {
-    font-size: 13px;
-    color: #424242;
-  }
+.invoice-details-popup {
+  background: white;
+  width: 90%;
+  max-width: 800px;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 
-  .mat-column-actions {
-    width: 80px;
-    text-align: center;
-  }
-
-  .mat-column-netValue {
-    font-weight: 500;
-    color: #2e7d32; /* Green for monetary values */
+  h3 {
+    margin-top: 0;
+    color: #3f51b5;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
   }
 }
 
-/* Improved filter section */
-.filter-section {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e0e0e0;
-  background-color: white;
-  padding: 20px;
-  margin-bottom: 24px;
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
 
-  mat-form-field {
-    .mat-form-field-wrapper {
-      padding-bottom: 0;
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    
+    .detail-label {
+      font-weight: 500;
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .detail-value {
+      font-size: 1.1em;
+      margin-top: 4px;
     }
 
-    .mat-form-field-outline {
-      background-color: #fafafa;
-      border-radius: 4px;
+    &.full-width {
+      grid-column: 1 / -1;
     }
   }
 }
 
-/* Enhanced buttons */
-button[mat-raised-button] {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(63, 81, 181, 0.2);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &[disabled] {
-    background-color: #e0e0e0 !important;
-    color: #9e9e9e !important;
-    transform: none !important;
-    box-shadow: none !important;
-  }
-}
-
-/* Better date range picker styling */
-.mat-date-range-input {
-  min-width: 240px;
-}
-
-/* Improved no-data state */
-.no-data {
-  background-color: #fafafa;
-  border: 1px dashed #e0e0e0;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #f5f5f5;
-    border-color: #bdbdbd;
-  }
-
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  
   button {
-    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 
-/* Responsive improvements */
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
 @media (max-width: 960px) {
-  .dashboard-container {
-    padding: 16px;
-  }
-
   .filter-section {
     padding: 16px;
     
     .row-filters {
       mat-form-field {
         min-width: 160px;
-      }
-      
-      .date-field {
-        min-width: 240px;
       }
     }
   }
@@ -260,104 +353,27 @@ button[mat-raised-button] {
     .row-filters {
       flex-direction: column;
       
-      mat-form-field, .date-field {
+      mat-form-field {
         width: 100% !important;
         min-width: 100% !important;
       }
     }
   }
-
-  .no-data {
-    padding: 24px 16px;
+.custom-table-header {
+  .mat-header-row {
+    background-color: #3f51b5 !important;
+    
+    .mat-header-cell {
+      color: white !important;
+    }
   }
 }
-
-/* Animation for table rows */
-.mat-row {
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #f5f5f5 !important;
-  }
-}
-
-/* Custom scrollbar for table (when overflow) */
-::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #b0b0b0;
-  border-radius: 10px;
-
-  &:hover {
-    background: #9e9e9e;
-  }
-}
-
-/* Status indicators (if you add status column later) */
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-
-  &.active {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+  .details-grid {
+    grid-template-columns: 1fr;
   }
 
-  &.expired {
-    background-color: #ffebee;
-    color: #c62828;
+  .invoice-details-popup {
+    width: 95%;
+    padding: 16px;
   }
-
-  &.pending {
-    background-color: #fff8e1;
-    color: #f9a825;
-  }
-}
-
-/* Tooltip customization */
-.mat-tooltip {
-  font-size: 12px !important;
-  padding: 6px 10px !important;
-}
-
-/* Loading spinner customization */
-.mat-spinner {
-  circle {
-    stroke: #3f51b5;
-  }
-}
-
-/* Form field focus state */
-.mat-form-field-appearance-outline.mat-focused {
-  .mat-form-field-outline-thick {
-    color: #3f51b5;
-  }
-
-  .mat-form-field-label {
-    color: #3f51b5;
-  }
-  .pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-
-  mat-form-field {
-    width: 100px;
-  }
-}
 }

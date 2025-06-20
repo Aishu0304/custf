@@ -377,5 +377,88 @@ button[mat-raised-button] {
     border-radius: 8px;
   }
 }
+/* Make sort headers visible */
+.mat-sort-header-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
   
+  .mat-sort-header-button {
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Sort indicator arrow styling */
+.mat-sort-header-arrow {
+  opacity: 1 !important; /* Force arrows to be visible */
+  color: white; /* Match your header text color */
+  transform: translateY(0px);
+  
+  .mat-sort-header-indicator {
+    opacity: 1;
+    color: white;
+  }
+}
+
+/* Active sort styling */
+.mat-header-cell.mat-sorted {
+  .mat-sort-header-arrow {
+    opacity: 1 !important;
+  }
+}
+
+/* Table header styling */
+.mat-header-cell {
+  background-color: #3f51b5;
+  color: white;
+  font-weight: 500;
+  
+  /* Ensure sort button is properly aligned */
+  .mat-sort-header-content {
+    display: flex;
+    align-items: center;
+  }
+}
+  
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.inquiry-popup {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  
+  .detail-item {
+    margin-bottom: 12px;
+    
+    .detail-label {
+      font-weight: 500;
+      color: rgba(0,0,0,0.7);
+    }
+    
+    &.full-width {
+      grid-column: 1 / -1;
+    }
+  }
 }

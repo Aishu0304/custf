@@ -151,6 +151,17 @@ export class DashboardDeliveryComponent implements OnInit {
   this.itemsPerPage = event.pageSize;
   this.currentPage = event.pageIndex + 1;
 }
+// Add this property to your component class
+selectedDelivery: any = null;
+
+// Replace viewDetails method with this:
+showDetails(delivery: any): void {
+  this.selectedDelivery = delivery;
+}
+
+closeDetails(): void {
+  this.selectedDelivery = null;
+}
 
   applyFilters(): void {
     this.currentPage = 1;

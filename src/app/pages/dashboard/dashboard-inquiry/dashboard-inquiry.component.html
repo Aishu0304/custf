@@ -44,89 +44,128 @@
         <mat-date-range-picker #picker></mat-date-range-picker>
       </mat-form-field>
     </div>
- 
+  
 
-  <div class="table-container">
-    <mat-spinner *ngIf="isLoading" diameter="50" class="spinner"></mat-spinner>
+  <mat-spinner *ngIf="isLoading" diameter="50" class="spinner"></mat-spinner>
     
-    <div *ngIf="error" class="error-message">
-      <mat-icon>error_outline</mat-icon>
-      {{ error }}
-    </div>
-
-    <table mat-table [dataSource]="filteredInquiries" matSort (matSortChange)="sortData($event)" 
-           *ngIf="!isLoading && filteredInquiries.length > 0" class="mat-elevation-z8">
-      <!-- Inquiry Number Column -->
-      <ng-container matColumnDef="inquiryNo">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Inquiry #</th>
-        <td mat-cell *matCellDef="let element">{{ element.inquiryNo }}</td>
-      </ng-container>
-
-      <!-- Created Date Column -->
-      <ng-container matColumnDef="createdDate">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Created Date</th>
-        <td mat-cell *matCellDef="let element">{{ formatDate(element.createdDate) }}</td>
-      </ng-container>
-
-      <!-- Document Type Column -->
-      <ng-container matColumnDef="docType">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
-        <td mat-cell *matCellDef="let element">{{ element.docType }}</td>
-      </ng-container>
-
-      <!-- Inquiry Date Column -->
-      <ng-container matColumnDef="inquiryDate">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Inquiry Date</th>
-        <td mat-cell *matCellDef="let element">{{ formatDate(element.inquiryDate) }}</td>
-      </ng-container>
-
-      <!-- Valid To Date Column -->
-      <ng-container matColumnDef="validToDate">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Valid Until</th>
-        <td mat-cell *matCellDef="let element">{{ formatDate(element.validToDate) }}</td>
-      </ng-container>
-
-      <!-- Description Column -->
-      <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
-        <td mat-cell *matCellDef="let element" class="description-cell">{{ element.description }}</td>
-      </ng-container>
-
-      <!-- Net Value Column -->
-      <ng-container matColumnDef="netValue">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Value</th>
-        <td mat-cell *matCellDef="let element">{{ formatCurrency(element.netValue, element.currency) }}</td>
-      </ng-container>
-
-      <!-- Currency Column -->
-      <ng-container matColumnDef="currency">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Currency</th>
-        <td mat-cell *matCellDef="let element">{{ element.currency }}</td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let element">
-          <button mat-icon-button (click)="viewDetails(element.inquiryNo)" 
-                  matTooltip="View details" color="primary">
-            <mat-icon>visibility</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-          [class.highlight-row]="hoveredRow === row.inquiryNo"
-          (mouseenter)="hoveredRow = row.inquiryNo"
-          (mouseleave)="hoveredRow = null"></tr>
-    </table>
-
-    <div *ngIf="!isLoading && filteredInquiries.length === 0" class="no-data mat-elevation-z8">
-      <mat-icon>info</mat-icon>
-      <p>No inquiries found matching your criteria.</p>
-      <button mat-button color="primary" (click)="clearFilters()" *ngIf="searchText || docTypeFilter || currencyFilter || dateRangeFilter.start || dateRangeFilter.end">
-        Clear Filters
-      </button>
-    </div>
+  <div *ngIf="error" class="error-message">
+    <mat-icon>error_outline</mat-icon>
+    {{ error }}
   </div>
+
+  <table mat-table [dataSource]="filteredInquiries" matSort (matSortChange)="sortData($event)" 
+         *ngIf="!isLoading && filteredInquiries.length > 0" class="mat-elevation-z8">
+    <!-- Inquiry Number Column -->
+    <ng-container matColumnDef="inquiryNo">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Inquiry #</th>
+      <td mat-cell *matCellDef="let element">{{ element.inquiryNo }}</td>
+    </ng-container>
+
+    <!-- Created Date Column -->
+    <ng-container matColumnDef="createdDate">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Created Date</th>
+      <td mat-cell *matCellDef="let element">{{ formatDate(element.createdDate) }}</td>
+    </ng-container>
+
+    <!-- Document Type Column -->
+    <ng-container matColumnDef="docType">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+      <td mat-cell *matCellDef="let element">{{ element.docType }}</td>
+    </ng-container>
+
+    <!-- Inquiry Date Column -->
+    <ng-container matColumnDef="inquiryDate">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Inquiry Date</th>
+      <td mat-cell *matCellDef="let element">{{ formatDate(element.inquiryDate) }}</td>
+    </ng-container>
+
+    <!-- Valid To Date Column -->
+    <ng-container matColumnDef="validToDate">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Valid Until</th>
+      <td mat-cell *matCellDef="let element">{{ formatDate(element.validToDate) }}</td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+      <td mat-cell *matCellDef="let element" class="description-cell">{{ element.description }}</td>
+    </ng-container>
+
+    <!-- Net Value Column -->
+    <ng-container matColumnDef="netValue">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Value</th>
+      <td mat-cell *matCellDef="let element">{{ formatCurrency(element.netValue, element.currency) }}</td>
+    </ng-container>
+
+    <!-- Currency Column -->
+    <ng-container matColumnDef="currency">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Currency</th>
+      <td mat-cell *matCellDef="let element">{{ element.currency }}</td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-icon-button (click)="selectedInquiry = element" 
+                matTooltip="View details" color="primary">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+        [class.highlight-row]="hoveredRow === row.inquiryNo"
+        (mouseenter)="hoveredRow = row.inquiryNo"
+        (mouseleave)="hoveredRow = null"></tr>
+  </table>
+</div>
+  <div *ngIf="!isLoading && filteredInquiries.length === 0" class="no-data mat-elevation-z8">
+    <mat-icon>info</mat-icon>
+    <p>No inquiries found matching your criteria.</p>
+    <button mat-button color="primary" (click)="clearFilters()" 
+            *ngIf="searchText || docTypeFilter || currencyFilter || dateRangeFilter.start || dateRangeFilter.end">
+      Clear Filters
+    </button>
+  </div>
+</div>
+
+<!-- Full screen overlay for inquiry details -->
+<div *ngIf="selectedInquiry" class="overlay">
+  <div class="inquiry-popup mat-elevation-z8">
+    <h3>Inquiry Details ({{ selectedInquiry.inquiryNo }})</h3>
+    <div class="details-grid">
+      <div class="detail-item">
+        <span class="detail-label">Document Type:</span>
+        <span class="detail-value">{{ selectedInquiry.docType }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Created Date:</span>
+        <span class="detail-value">{{ formatDate(selectedInquiry.createdDate) }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Inquiry Date:</span>
+        <span class="detail-value">{{ formatDate(selectedInquiry.inquiryDate) }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Valid Until:</span>
+        <span class="detail-value">{{ formatDate(selectedInquiry.validToDate) }}</span>
+      </div>
+      <div class="detail-item full-width">
+        <span class="detail-label">Description:</span>
+        <span class="detail-value">{{ selectedInquiry.description }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Net Value:</span>
+        <span class="detail-value">{{ formatCurrency(selectedInquiry.netValue, selectedInquiry.currency) }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Currency:</span>
+        <span class="detail-value">{{ selectedInquiry.currency }}</span>
+      </div>
+    </div>
+
+    <button mat-raised-button color="warn" (click)="selectedInquiry = null">Close</button>
+  </div>
+</div>

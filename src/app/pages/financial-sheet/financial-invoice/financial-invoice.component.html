@@ -1,73 +1,102 @@
 <div class="invoice-container">
   <div class="header">
     <h2>Financial Invoices</h2>
-    <div class="controls">
-      <div class="search-box">
-        <input type="text" [(ngModel)]="searchText" placeholder="Search invoices..." class="search-input">
-        <i class="search-icon">🔍</i>
-      </div>
+    <button mat-raised-button color="primary" (click)="clearFilters()" 
+            [disabled]="!searchText && !billingTypeFilter">
+      Clear Filters
+    </button>
+  </div>
+
+  <!-- Error message -->
+  <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="row-filters">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search Invoices</mat-label>
+        <input matInput [(ngModel)]="searchText" (input)="applyFilters()" 
+               placeholder="Search by billing document or type">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Billing Type</mat-label>
+        <mat-select [(ngModel)]="billingTypeFilter" (selectionChange)="applyFilters()">
+          <mat-option value="">All Types</mat-option>
+          <mat-option *ngFor="let type of billingTypes" [value]="type">
+            {{ type }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
+  
+  <!-- Loading overlay -->
+  <div *ngIf="isLoading" class="loading">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <p>Loading invoice data...</p>
   </div>
 
-  <div *ngIf="errorMessage" class="error-message">
-    {{ errorMessage }}
-    <button (click)="clearError()" class="close-error">×</button>
-  </div>
+  <!-- Table -->
+  <div *ngIf="filteredData.length > 0">
+    <table mat-table [dataSource]="filteredData" matSort class="mat-elevation-z8">
+      <!-- Customer ID Column -->
+      <ng-container matColumnDef="customerId">
+        <th mat-header-cell *matHeaderCellDef>Customer ID</th>
+        <td mat-cell *matCellDef="let item">{{ customerId }}</td>
+      </ng-container>
 
-  <div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>Loading data...</p>
-  </div>
+      <!-- Billing Document Column -->
+      <ng-container matColumnDef="billingDoc">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Billing Document</th>
+        <td mat-cell *matCellDef="let item">{{ item.billingDoc }}</td>
+      </ng-container>
 
-  <div class="table-container" *ngIf="INVOICE.length > 0">
-    <table class="invoice-table">
-      <thead>
-        <tr>
-          <th *ngFor="let header of headers; let i = index" 
-              (click)="sort(names[i])" 
-              [class.sorted]="key === names[i]">
-            {{ header }}
-            <span class="sort-icon" *ngIf="key === names[i]">
-              {{ reverse ? '↑' : '↓' }}
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of paginatedData">
-          <td>{{ this.customerId }}</td>
-          <td>{{ item.billingDoc }}</td>
-          <td>{{ item.billingDate | date:'mediumDate' }}</td>
-          <td>{{ item.itemNumber }}</td>
-          <td>{{ item.billingtype }}</td>
-          <td>
-  <button (click)="downloadPDF(item.billingDoc, item.itemNumber)" class="download-btn">
-    <i class="download-icon">↓</i> PDF
-  </button>
-</td>
-        </tr>
-      </tbody>
+      <!-- Billing Date Column -->
+      <ng-container matColumnDef="billingDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Billing Date</th>
+        <td mat-cell *matCellDef="let item">{{ item.billingDate | date:'mediumDate' }}</td>
+      </ng-container>
+
+      <!-- Item Number Column -->
+      <ng-container matColumnDef="itemNumber">
+        <th mat-header-cell *matHeaderCellDef>Item Number</th>
+        <td mat-cell *matCellDef="let item">{{ item.itemNumber }}</td>
+      </ng-container>
+
+      <!-- Billing Type Column -->
+      <ng-container matColumnDef="billingtype">
+        <th mat-header-cell *matHeaderCellDef>Billing Type</th>
+        <td mat-cell *matCellDef="let item">{{ item.billingtype }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let item">
+          <button mat-icon-button (click)="downloadPDF(item.billingDoc, item.itemNumber)" 
+                  matTooltip="Download PDF" color="primary">
+            <mat-icon>download</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
-
-    <div class="pagination" *ngIf="totalPages > 1">
-      <button (click)="currentPage = currentPage - 1" 
-              [disabled]="currentPage === 1"
-              class="page-btn">
-        Previous
-      </button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button (click)="currentPage = currentPage + 1" 
-              [disabled]="currentPage === totalPages"
-              class="page-btn">
-        Next
-      </button>
-    </div>
+  </div>
+    <mat-paginator [length]="filteredData.length"
+                   [pageSize]="10"
+                   [pageSizeOptions]="[5, 10, 25, 100]"
+                   aria-label="Select page">
+    </mat-paginator>
   </div>
 
-  <div *ngIf="INVOICE.length === 0 && !isLoading" class="no-data">
+  <!-- No data message -->
+  <div *ngIf="filteredData.length === 0 && !isLoading" class="no-data">
     <p>No invoice data available</p>
-    <button (click)="fetchInvoiceData()" class="refresh-btn">
-      Retry
+    <button mat-raised-button color="primary" (click)="fetchInvoiceData()">
+      <mat-icon>refresh</mat-icon> Retry
     </button>
   </div>
 </div>

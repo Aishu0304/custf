@@ -386,3 +386,93 @@ button[mat-raised-button] {
     color: #3f51b5;
   }
 }
+/* Overlay that covers the entire screen */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Delivery details card */
+.delivery-popup {
+  background: white;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  
+  .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+    
+    h3 {
+      margin: 0;
+      color: #3f51b5;
+    }
+  }
+  
+  .details-content {
+    padding: 24px;
+    overflow-y: auto;
+    flex-grow: 1;
+    
+    .detail-row {
+      display: flex;
+      margin-bottom: 16px;
+      
+      .detail-label {
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.7);
+        width: 120px;
+        flex-shrink: 0;
+      }
+      
+      .detail-value {
+        flex-grow: 1;
+        word-break: break-word;
+      }
+      
+      &.full-width {
+        flex-direction: column;
+        
+        .detail-label {
+          width: 100%;
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .delivery-popup {
+    width: 95%;
+    
+    .details-content {
+      padding: 16px;
+      
+      .detail-row {
+        flex-direction: column;
+        
+        .detail-label {
+          width: 100%;
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+}
